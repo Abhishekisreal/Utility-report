@@ -20,14 +20,15 @@
 <body>
 
 <div class="container">
-    <h2>📊 Utility Input Form</h2>
+    <h2>Utility Input Form</h2>
     
     <div class="footer-info">
         <input type="text" id="supName" placeholder="Supervisor Name" value="Abhishek">
         <select id="shift">
-            <option>Morning (06:00–14:00)</option>
-            <option>Evening (14:00–22:00)</option>
-            <option>Night (22:00–06:00)</option>
+            <option>Shift 1 (06:00–14:00)</option>
+            <option>Shift 2 (14:00–22:00)</option>
+            <option>Shift 3 (22:00–06:00)</option>
+            <option>Complete Day (00:00–24:00)</option>
         </select>
     </div>
 
@@ -47,7 +48,7 @@
     <p>Remarks:<br><textarea id="remarks" rows="2">No remarks</textarea></p>
     <p>Any Concerns:<br><textarea id="concerns" rows="2">Nil</textarea></p>
 
-    <button onclick="copyReport()">📋 Copy Formatted Report</button>
+    <button onclick="copyReport()">Copy Formatted Report</button>
 </div>
 
 <script>
@@ -61,34 +62,34 @@
         const concerns = document.getElementById('concerns').value;
         const argonDays = document.getElementById('argonDays').value;
 
-        let criticalMsg = argonDays <= 2 ? " ⚠️ *CRITICAL — ORDER NOW*" : "";
+        let criticalMsg = argonDays <= 2 ? " CRITICAL — ORDER NOW" : "";
 
-        let report = `🏭 *UTILITY SHIFT REPORT*\n━━━━━━━━━━━━━━━━━━━━\n`;
-        report += `📅 *Date :* ${date}\n⏰ *Shift :* ${shift}\n👤 *Supervisor :* ${sup}\n\n`;
+        let report = `UTILITY SHIFT REPORT\n━━━━━━━━━━━━━━━━━━━━\n`;
+        report += `Date : ${date}\nShift : ${shift}\nSupervisor : ${sup}\n\n`;
         
-        report += `━━━━━━━━━━━━━━━━━━━━\n💧 *WATER UTILITIES*\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nWATER UTILITIES\n`;
         report += ` 1. ${inputs[0].dataset.label} : ${inputs[0].value || 0} M³/Day\n`;
         report += ` 2. ${inputs[1].dataset.label} : ${inputs[1].value || 0} M³/Day\n`;
         report += ` 3. ${inputs[2].dataset.label} : ${inputs[2].value || 0} M³/Day\n\n`;
 
-        report += `━━━━━━━━━━━━━━━━━━━━\n🫧 *GAS & COMPRESSED AIR*\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nGAS & COMPRESSED AIR\n`;
         report += ` 4. ${inputs[3].dataset.label} : ${inputs[3].value || 0} M³/Day\n`;
         report += ` 5. ${inputs[4].dataset.label} : ${inputs[4].value || 0} SCFM/Day\n`;
         report += ` 6. ${inputs[5].dataset.label} : ${inputs[5].value || 0} Days${criticalMsg}\n\n`;
 
-        report += `━━━━━━━━━━━━━━━━━━━━\n🌊 *WASTE WATER*\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nWASTE WATER\n`;
         report += ` 7. ${inputs[6].dataset.label} : ${inputs[6].value || 0} M³/Day\n`;
         report += ` 8. ${inputs[7].dataset.label} : ${inputs[7].value || 0} M³/Day\n\n`;
 
-        report += `━━━━━━━━━━━━━━━━━━━━\n⚡ *ELECTRICAL*\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nELECTRICAL\n`;
         report += ` 9. ${inputs[8].dataset.label} : ${inputs[8].value || 0} kWh/Day\n\n`;
 
-        report += `━━━━━━━━━━━━━━━━━━━━\n📝 *REMARKS*\n${remarks}\n\n`;
-        report += `━━━━━━━━━━━━━━━━━━━━\n⚠️ *ANY CONCERNS*\n${concerns}\n\n`;
-        report += `━━━━━━━━━━━━━━━━━━━━\n_Reported by: ${sup} | ${time}_`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nREMARKS\n${remarks}\n\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nANY CONCERNS\n${concerns}\n\n`;
+        report += `━━━━━━━━━━━━━━━━━━━━\nReported by: ${sup} | ${time}`;
 
         navigator.clipboard.writeText(report).then(() => {
-            alert("Report copied to clipboard! You can now paste it in WhatsApp.");
+            alert("Report copied to clipboard! You can now paste it.");
         });
     }
 </script>
