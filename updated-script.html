@@ -1,0 +1,163 @@
+<!-- ─────────────────────────────────────────────────────────────────────────
+     REPLACE your existing <script> block with this one.
+     Changes:
+       1. Unit auto-switches: M³/Shift for shifts, M³/Day for Complete Day
+       2. "Save to Excel Sheet" button sends a single clean row to Google Sheets
+       3. copyReport() still works exactly as before
+     ──────────────────────────────────────────────────────────────────────── -->
+
+<!-- ADD this button right after your existing Copy button in HTML -->
+<!--
+<button onclick="saveToSheet()">📊 Save to Excel Sheet</button>
+<div id="saveStatus" style="margin-top:8px;font-size:13px;text-align:center;display:none"></div>
+-->
+
+
+<script>
+
+// ── PASTE YOUR GOOGLE APPS SCRIPT URL HERE ────────────────────────────────────
+const APPS_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+// Get it: script.google.com → Deploy → New Deployment → Web App → Copy URL
+// ─────────────────────────────────────────────────────────────────────────────
+
+
+// ── Helper: figure out unit from shift selection ─────────────────────────────
+function getUnit() {
+  const shift = document.getElementById('shift').value;
+  const isDay = shift.toLowerCase().includes("complete day");
+  return {
+    vol:  isDay ? "M³/Day"    : "M³/Shift",
+    flow: isDay ? "SCFM/Day"  : "SCFM/Shift",
+    kw:   isDay ? "kWh/Day"   : "kWh/Shift",
+    isCompleteDay: isDay
+  };
+}
+
+// ── Helper: determine period type label ─────────────────────────────────────
+function getPeriodType() {
+  const shift = document.getElementById('shift').value;
+  return shift.toLowerCase().includes("complete day") ? "Complete Day" : "Shift";
+}
+
+
+// ── COPY REPORT (updated — unit changes with shift selection) ────────────────
+function copyReport() {
+  const date     = document.getElementById('date').value;
+  const shift    = document.getElementById('shift').value;
+  const sup      = document.getElementById('supName').value;
+  const remarks  = document.getElementById('remarks').value;
+  const concerns = document.getElementById('concerns').value;
+  const argonDays = document.getElementById('argonDays').value;
+  const inputs   = document.querySelectorAll('.utility-input');   // update selector to match your inputs
+  const time     = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  const u = getUnit();   // <── auto unit based on shift selection
+
+  let criticalMsg = argonDays <= 2 ? " ⚠️ CRITICAL — ORDER NOW" : "";
+
+  let report = `🏭 *UTILITY SHIFT REPORT*\n━━━━━━━━━━━━━━━━━━━━\n`;
+  report += `📅 *Date :* ${date}\n⏰ *Shift :* ${shift}\n👤 *Supervisor :* ${sup}\n\n`;
+
+  report += `━━━━━━━━━━━━━━━━━━━━\n💧 *WATER UTILITIES*\n`;
+  report += ` 1. ${inputs[0].dataset.label} : ${inputs[0].value || 0} ${u.vol}\n`;
+  report += ` 2. ${inputs[1].dataset.label} : ${inputs[1].value || 0} ${u.vol}\n`;
+  report += ` 3. ${inputs[2].dataset.label} : ${inputs[2].value || 0} ${u.vol}\n\n`;
+
+  report += `━━━━━━━━━━━━━━━━━━━━\n🫧 *GAS & COMPRESSED AIR*\n`;
+  report += ` 4. ${inputs[3].dataset.label} : ${inputs[3].value || 0} ${u.vol}\n`;
+  report += ` 5. ${inputs[4].dataset.label} : ${inputs[4].value || 0} ${u.flow}\n`;
+  report += ` 6. ${inputs[5].dataset.label} : ${inputs[5].value || 0} Days${criticalMsg}\n\n`;
+
+  report += `━━━━━━━━━━━━━━━━━━━━\n🌊 *WASTE WATER*\n`;
+  report += ` 7. ${inputs[6].dataset.label} : ${inputs[6].value || 0} ${u.vol}\n`;
+  report += ` 8. ${inputs[7].dataset.label} : ${inputs[7].value || 0} ${u.vol}\n\n`;
+
+  report += `━━━━━━━━━━━━━━━━━━━━\n⚡ *ELECTRICAL*\n`;
+  report += ` 9. ${inputs[8].dataset.label} : ${inputs[8].value || 0} ${u.kw}\n\n`;
+
+  report += `━━━━━━━━━━━━━━━━━━━━\n📝 *REMARKS*\n${remarks}\n\n`;
+  report += `━━━━━━━━━━━━━━━━━━━━\n⚠️ *ANY CONCERNS*\n${concerns}\n\n`;
+  report += `━━━━━━━━━━━━━━━━━━━━\n_Reported by: ${sup} | ${time}_`;
+
+  navigator.clipboard.writeText(report).then(() => {
+    alert("Report copied to clipboard! You can now paste it in WhatsApp.");
+  });
+}
+
+
+// ── SAVE TO GOOGLE SHEET ─────────────────────────────────────────────────────
+async function saveToSheet() {
+  const btn    = document.getElementById("saveSheetBtn");
+  const status = document.getElementById("saveStatus");
+
+  const date      = document.getElementById('date').value;
+  const shift     = document.getElementById('shift').value;
+  const sup       = document.getElementById('supName').value;
+  const remarks   = document.getElementById('remarks').value;
+  const concerns  = document.getElementById('concerns').value;
+  const argonDays = document.getElementById('argonDays').value;
+  const inputs    = document.querySelectorAll('.utility-input');  // update selector
+
+  if (!sup) {
+    showStatus(status, "error", "⚠️ Please enter supervisor name first.");
+    return;
+  }
+
+  // Build payload — values only (no units), units resolved server-side
+  const payload = {
+    date:       date,
+    shift:      shift,
+    periodType: getPeriodType(),   // "Shift" or "Complete Day"
+    supervisor: sup,
+    gcw:        inputs[0]?.value || "",
+    ro:         inputs[1]?.value || "",
+    di:         inputs[2]?.value || "",
+    argon:      inputs[3]?.value || "",
+    cda:        inputs[4]?.value || "",
+    argdays:    argonDays         || "",
+    gww:        inputs[6]?.value || "",
+    aww:        inputs[7]?.value || "",
+    elec:       inputs[8]?.value || "",
+    remarks:    remarks  || "NIL",
+    concerns:   concerns || "NIL",
+  };
+
+  // UI loading
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Saving…"; }
+  showStatus(status, "info", "Sending to Excel sheet…");
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload),
+      mode: "no-cors"   // Required for Google Apps Script
+    });
+
+    // no-cors = can't read response body, assume success if no throw
+    if (btn) { btn.disabled = false; btn.textContent = "✅ Saved!"; }
+    showStatus(status, "success", "✅ Row saved to Excel sheet! Manager can view it now.");
+    setTimeout(() => { if (btn) btn.textContent = "📊 Save to Excel Sheet"; }, 3500);
+
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = "📊 Save to Excel Sheet"; }
+    showStatus(status, "error", "❌ Save failed — check internet connection and try again.");
+    console.error(err);
+  }
+}
+
+function showStatus(el, type, msg) {
+  if (!el) return;
+  const colors = {
+    success: { bg: "#EAF3DE", color: "#3B6D11", border: "#C0DD97" },
+    error:   { bg: "#FCEBEB", color: "#A32D2D", border: "#F7C1C1" },
+    info:    { bg: "#E6F1FB", color: "#185FA5", border: "#B5D4F4" },
+  };
+  const c = colors[type] || colors.info;
+  el.style.cssText = `display:block;padding:10px 14px;border-radius:10px;font-size:13px;
+    font-weight:500;text-align:center;background:${c.bg};color:${c.color};
+    border:1px solid ${c.border};margin-top:8px`;
+  el.textContent = msg;
+}
+
+</script>
