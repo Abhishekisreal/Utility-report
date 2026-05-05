@@ -10,89 +10,211 @@
         h2 { text-align: center; color: #2c3e50; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; }
-        input, textarea { width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #219150; }
-        .footer-info { display: flex; gap: 10px; margin-bottom: 15px; }
+        th { background: #f8f9fa; font-size: 13px; }
+        input[type="number"], input[type="text"], textarea, select {
+            width: 90%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+        }
+        .footer-info { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .footer-info input, .footer-info select { flex: 1; min-width: 140px; width: auto; }
+        .btn-copy {
+            width: 100%; padding: 12px; background: #27ae60; color: white;
+            border: none; border-radius: 4px; cursor: pointer;
+            font-size: 16px; font-weight: bold; margin-bottom: 10px;
+        }
+        .btn-copy:hover { background: #219150; }
+        .btn-csv {
+            width: 100%; padding: 12px; background: #1d6f42; color: white;
+            border: none; border-radius: 4px; cursor: pointer;
+            font-size: 16px; font-weight: bold;
+        }
+        .btn-csv:hover { background: #155232; }
+        #saveStatus {
+            display: none; margin-top: 10px; padding: 10px 14px;
+            border-radius: 6px; font-size: 13px; font-weight: 500; text-align: center;
+        }
+        #saveStatus.success { display:block; background:#EAF3DE; color:#3B6D11; border:1px solid #C0DD97; }
+        #saveStatus.error   { display:block; background:#FCEBEB; color:#A32D2D; border:1px solid #F7C1C1; }
+        .unit-badge {
+            display: inline-block; font-size: 10px; font-weight: 700;
+            padding: 1px 5px; border-radius: 3px;
+            background: #dbeafe; color: #1e40af; margin-left: 4px;
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
     <h2>Utility Input Form</h2>
-    
+
     <div class="footer-info">
-        <input type="text" id="supName" placeholder="Supervisor Name" value="Abhishek">
-        <select id="shift">
-            <option>Shift 1 (06:00–14:00)</option>
-            <option>Shift 2 (14:00–22:00)</option>
-            <option>Shift 3 (22:00–06:00)</option>
-            <option>Complete Day (00:00–24:00)</option>
+        <input type="text" id="supName" placeholder="Supervisor Name" value="">
+        <select id="shift" onchange="updateUnits()">
+            <option value="Shift 1|06:00-14:00">Shift 1 (06:00-14:00)</option>
+            <option value="Shift 2|14:00-22:00">Shift 2 (14:00-22:00)</option>
+            <option value="Shift 3|22:00-06:00">Shift 3 (22:00-06:00)</option>
+            <option value="Complete Day|00:00-24:00">Complete Day (00:00-24:00)</option>
         </select>
     </div>
 
     <table id="utilityTable">
-        <tr><th>#</th><th>Utility</th><th>Value</th></tr>
-        <tr><td>1</td><td>GCW make up RO (M3/Day)</td><td><input type="number" class="val" data-label="GCW Make Up RO Water"></td></tr>
-        <tr><td>2</td><td>RO water (M3/Day)</td><td><input type="number" class="val" data-label="RO Water"></td></tr>
-        <tr><td>3</td><td>DI water (M3/Day)</td><td><input type="number" class="val" data-label="DI Water"></td></tr>
-        <tr><td>4</td><td>Argon (M3/Day)</td><td><input type="number" class="val" data-label="Argon"></td></tr>
-        <tr><td>5</td><td>CDA (SCFM/Day)</td><td><input type="number" class="val" data-label="CDA"></td></tr>
-        <tr><td>6</td><td>Argon Tank Remaining (Days)</td><td><input type="number" id="argonDays" class="val" data-label="Argon Tank Remaining"></td></tr>
-        <tr><td>7</td><td>General WW (M3/Day)</td><td><input type="number" class="val" data-label="General WW"></td></tr>
-        <tr><td>8</td><td>Acid WW (M3/Day)</td><td><input type="number" class="val" data-label="Acid WW"></td></tr>
-        <tr><td>9</td><td>Electrical Consumption (kWh)</td><td><input type="number" class="val" data-label="Consumption"></td></tr>
+        <tr>
+            <th>#</th><th>Utility</th>
+            <th>Value <span class="unit-badge" id="unitBadge">M3/Shift</span></th>
+        </tr>
+        <tr><td>1</td><td>GCW Make Up RO Water</td>
+            <td><input type="number" class="val" data-label="GCW Make Up RO Water" placeholder="0" step="0.1"></td></tr>
+        <tr><td>2</td><td>RO Water</td>
+            <td><input type="number" class="val" data-label="RO Water" placeholder="0" step="0.1"></td></tr>
+        <tr><td>3</td><td>DI Water</td>
+            <td><input type="number" class="val" data-label="DI Water" placeholder="0" step="0.1"></td></tr>
+        <tr><td>4</td><td>Argon</td>
+            <td><input type="number" class="val" data-label="Argon" placeholder="0" step="0.1"></td></tr>
+        <tr><td>5</td><td>CDA</td>
+            <td><input type="number" class="val" data-label="CDA" placeholder="0" step="0.1"></td></tr>
+        <tr><td>6</td><td>Argon Tank Remaining (Days)</td>
+            <td><input type="number" id="argonDays" class="val" data-label="Argon Tank Remaining" placeholder="0" step="0.1"></td></tr>
+        <tr><td>7</td><td>General Waste Water</td>
+            <td><input type="number" class="val" data-label="General WW" placeholder="0" step="0.1"></td></tr>
+        <tr><td>8</td><td>Acid Waste Water</td>
+            <td><input type="number" class="val" data-label="Acid WW" placeholder="0" step="0.1"></td></tr>
+        <tr><td>9</td><td>Electrical Consumption</td>
+            <td><input type="number" class="val" data-label="Electrical Consumption" placeholder="0" step="1"></td></tr>
     </table>
 
     <p>Remarks:<br><textarea id="remarks" rows="2">No remarks</textarea></p>
-    <p>Any Concerns:<br><textarea id="concerns" rows="2">Nil</textarea></p>
-
-    <button onclick="copyReport()">Copy Formatted Report</button>
+    <p style="margin-top:10px">Any Concerns:<br><textarea id="concerns" rows="2">Nil</textarea></p>
+    <br>
+    <button class="btn-copy" onclick="copyReport()">Copy Formatted Report (WhatsApp)</button>
+    <button class="btn-csv"  onclick="downloadCSV()">Download as Excel (CSV)</button>
+    <div id="saveStatus"></div>
 </div>
 
 <script>
+    function getUnits() {
+        const val = document.getElementById('shift').value;
+        const isDay = val.startsWith('Complete Day');
+        return {
+            vol:   isDay ? 'M3/Day'   : 'M3/Shift',
+            flow:  isDay ? 'SCFM/Day' : 'SCFM/Shift',
+            kw:    isDay ? 'kWh/Day'  : 'kWh/Shift',
+            isDay: isDay
+        };
+    }
+
+    function updateUnits() {
+        document.getElementById('unitBadge').textContent = getUnits().vol;
+    }
+
+    function getShiftName() { return document.getElementById('shift').value.split('|')[0]; }
+    function getShiftTime() { return document.getElementById('shift').value.split('|')[1]; }
+
     function copyReport() {
-        const date = new Date().toLocaleDateString('en-GB');
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const sup = document.getElementById('supName').value;
-        const shift = document.getElementById('shift').value;
-        const inputs = document.querySelectorAll('.val');
-        const remarks = document.getElementById('remarks').value;
+        const date     = new Date().toLocaleDateString('en-GB');
+        const time     = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const sup      = document.getElementById('supName').value || 'N/A';
+        const shift    = getShiftName();
+        const shiftT   = getShiftTime();
+        const inputs   = document.querySelectorAll('.val');
+        const remarks  = document.getElementById('remarks').value;
         const concerns = document.getElementById('concerns').value;
-        const argonDays = document.getElementById('argonDays').value;
+        const argonDays = parseFloat(document.getElementById('argonDays').value);
+        const u        = getUnits();
 
-        let criticalMsg = argonDays <= 2 ? " CRITICAL — ORDER NOW" : "";
+        let criticalMsg = argonDays <= 2 ? ' CRITICAL - ORDER NOW' : '';
 
-        let report = `UTILITY SHIFT REPORT\n━━━━━━━━━━━━━━━━━━━━\n`;
-        report += `Date : ${date}\nShift : ${shift}\nSupervisor : ${sup}\n\n`;
-        
-        report += `━━━━━━━━━━━━━━━━━━━━\nWATER UTILITIES\n`;
-        report += ` 1. ${inputs[0].dataset.label} : ${inputs[0].value || 0} M³/Day\n`;
-        report += ` 2. ${inputs[1].dataset.label} : ${inputs[1].value || 0} M³/Day\n`;
-        report += ` 3. ${inputs[2].dataset.label} : ${inputs[2].value || 0} M³/Day\n\n`;
-
-        report += `━━━━━━━━━━━━━━━━━━━━\nGAS & COMPRESSED AIR\n`;
-        report += ` 4. ${inputs[3].dataset.label} : ${inputs[3].value || 0} M³/Day\n`;
-        report += ` 5. ${inputs[4].dataset.label} : ${inputs[4].value || 0} SCFM/Day\n`;
+        let report = `UTILITY SHIFT REPORT\n`;
+        report += `Date      : ${date}\n`;
+        report += `Shift     : ${shift} (${shiftT})\n`;
+        report += `Supervisor: ${sup}\n\n`;
+        report += `WATER UTILITIES\n`;
+        report += ` 1. ${inputs[0].dataset.label} : ${inputs[0].value || 0} ${u.vol}\n`;
+        report += ` 2. ${inputs[1].dataset.label} : ${inputs[1].value || 0} ${u.vol}\n`;
+        report += ` 3. ${inputs[2].dataset.label} : ${inputs[2].value || 0} ${u.vol}\n\n`;
+        report += `GAS & COMPRESSED AIR\n`;
+        report += ` 4. ${inputs[3].dataset.label} : ${inputs[3].value || 0} ${u.vol}\n`;
+        report += ` 5. ${inputs[4].dataset.label} : ${inputs[4].value || 0} ${u.flow}\n`;
         report += ` 6. ${inputs[5].dataset.label} : ${inputs[5].value || 0} Days${criticalMsg}\n\n`;
-
-        report += `━━━━━━━━━━━━━━━━━━━━\nWASTE WATER\n`;
-        report += ` 7. ${inputs[6].dataset.label} : ${inputs[6].value || 0} M³/Day\n`;
-        report += ` 8. ${inputs[7].dataset.label} : ${inputs[7].value || 0} M³/Day\n\n`;
-
-        report += `━━━━━━━━━━━━━━━━━━━━\nELECTRICAL\n`;
-        report += ` 9. ${inputs[8].dataset.label} : ${inputs[8].value || 0} kWh/Day\n\n`;
-
-        report += `━━━━━━━━━━━━━━━━━━━━\nREMARKS\n${remarks}\n\n`;
-        report += `━━━━━━━━━━━━━━━━━━━━\nANY CONCERNS\n${concerns}\n\n`;
-        report += `━━━━━━━━━━━━━━━━━━━━\nReported by: ${sup} | ${time}`;
+        report += `WASTE WATER\n`;
+        report += ` 7. ${inputs[6].dataset.label} : ${inputs[6].value || 0} ${u.vol}\n`;
+        report += ` 8. ${inputs[7].dataset.label} : ${inputs[7].value || 0} ${u.vol}\n\n`;
+        report += `ELECTRICAL\n`;
+        report += ` 9. ${inputs[8].dataset.label} : ${inputs[8].value || 0} ${u.kw}\n\n`;
+        report += `REMARKS\n${remarks}\n\n`;
+        report += `ANY CONCERNS\n${concerns}\n\n`;
+        report += `Reported by: ${sup} | ${time}`;
 
         navigator.clipboard.writeText(report).then(() => {
-            alert("Report copied to clipboard! You can now paste it.");
+            alert('Report copied! Paste it in WhatsApp.');
         });
     }
-</script>
 
+    function downloadCSV() {
+        const status   = document.getElementById('saveStatus');
+        const sup      = document.getElementById('supName').value || '';
+        if (!sup.trim()) {
+            status.className = 'error';
+            status.textContent = 'Please enter supervisor name before downloading.';
+            return;
+        }
+        const date      = new Date().toLocaleDateString('en-GB');
+        const time      = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const shift     = getShiftName();
+        const shiftT    = getShiftTime();
+        const inputs    = document.querySelectorAll('.val');
+        const remarks   = document.getElementById('remarks').value.replace(/,/g,';').replace(/\n/g,' ');
+        const concerns  = document.getElementById('concerns').value.replace(/,/g,';').replace(/\n/g,' ');
+        const argonDays = document.getElementById('argonDays').value;
+        const u         = getUnits();
+
+        let argonStatus = 'OK';
+        if (argonDays !== '') {
+            const d = parseFloat(argonDays);
+            if      (d <= 2) argonStatus = 'CRITICAL - ORDER NOW';
+            else if (d <= 7) argonStatus = 'Low - Plan Refill';
+        }
+
+        const headers = [
+            'Date','Shift','Shift Time','Period Type','Supervisor',
+            'GCW Make Up RO Water ('+u.vol+')',
+            'RO Water ('+u.vol+')',
+            'DI Water ('+u.vol+')',
+            'Argon ('+u.vol+')',
+            'CDA ('+u.flow+')',
+            'Argon Tank Remaining (Days)',
+            'General WW ('+u.vol+')',
+            'Acid WW ('+u.vol+')',
+            'Electrical Consumption ('+u.kw+')',
+            'Argon Status','Remarks','Concerns','Reported At'
+        ];
+
+        const row = [
+            date, shift, shiftT,
+            u.isDay ? 'Complete Day' : 'Shift',
+            sup,
+            inputs[0].value||'', inputs[1].value||'', inputs[2].value||'',
+            inputs[3].value||'', inputs[4].value||'', argonDays||'',
+            inputs[6].value||'', inputs[7].value||'', inputs[8].value||'',
+            argonStatus, remarks, concerns, time
+        ];
+
+        const csv = [headers.join(','), row.map(v => '"'+v+'"').join(',')].join('\n');
+
+        const safeDate  = new Date().toLocaleDateString('en-GB').replace(/\//g,'-');
+        const safeShift = shift.replace(/ /g,'');
+        const filename  = 'UtilityReport_'+safeShift+'_'+safeDate+'.csv';
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url; link.download = filename;
+        document.body.appendChild(link); link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        status.className = 'success';
+        status.textContent = 'Downloaded: ' + filename + ' — open in Excel and paste into your master sheet.';
+    }
+
+    updateUnits();
+</script>
 </body>
 </html>
